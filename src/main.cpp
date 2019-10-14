@@ -87,6 +87,53 @@ bool ispalinpermute(const std::string &s) {
 	return true;
 }
 
+bool oneaway(const std::string &a, const std::string &b, int start = 0, int num_edits = 0) {
+	if (num_edits > 1) {
+		return false;
+	}
+	int len_dif = a.length() - b.length();
+	if (std::abs(len_dif) > 1) {
+		return false;
+	}
+	for (int i = start; i < a.length(); ++i) {
+		// todo handle string lengths: we could be accessing b out-of-bounds here, or ignoring the remaining characters in b
+		if (a[i] != b[i]) {
+			const std::string add_b = b.substr(0, i - 1) + a[i] + b.substr(i, b.length() - i);
+			const std::string rem_b = b.substr(0, i - 1) + b.substr(i + 1, b.length() - i + 1);
+			const std::string alt_b = b.substr(0, i - 1) + a[i] + b.substr(i + 1, b.length() - i + 1);
+			bool with_add = oneaway(a, add_b, i, num_edits + 1);
+			bool with_rem = oneaway(a, rem_b, i, num_edits + 1);
+			bool with_alt = oneaway(a, alt_b, i, num_edits + 1);
+			return with_add || with_rem || with_alt;
+		}
+	}
+	return true;
+}
+
+char *compress(char *out, int *out_len, char *in, int len) {
+	char prev = 0;
+	int count = 0;
+	char *o = out;
+	for (char *c = in; c < in + len; ++c) {
+		if (*c != prev) {
+			if (count) {
+				*o++ = char(count); // todo int-to-ascii
+				*o++ = prev;
+				if (o - out >= len - 1) {
+					return in;
+				}
+			}
+			prev = *c;
+			count = 0;
+		} else {
+			++count;
+		}
+	}
+	*out_len = o - out;
+	*o = '\0';
+	return out;
+}
+
 int main(int argc, char **argv) {
 
 	return 0;
