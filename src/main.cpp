@@ -259,6 +259,134 @@ bool hasroute(const sgraph &s, const sgraph &e) {
 	return false;
 }
 
+struct btree {
+	btree *a, *b;
+	int v;
+};
+
+btree *mintree(int *vals, int len) {
+	btree *t = new btree();
+	int mid = len / 2;
+	int val = vals[mid];
+	t->v = val;
+	if (mid) {
+		t->a = mintree(vals + mid / 2, mid);
+		t->b = mintree(vals + mid * 2, mid);
+	}
+	return t;
+}
+
+struct slist_btree {
+	const btree *val;
+	slist_btree *next;
+};
+
+std::vector<slist_btree *> *depthlists(const btree &tree, int depth = 0, std::vector<slist_btree *> *lists = nullptr) {
+	if (lists == nullptr) {
+		lists = new std::vector<slist_btree *>();
+	}
+	slist_btree *next = new slist_btree();
+	next->val = &tree;
+	if (lists->size() > depth) {
+		(*lists)[depth]->next = next;
+	} else {
+		(*lists)[depth] = next;
+	}
+	if (tree.a) {
+		depthlists(*tree.a, depth + 1, lists);
+	}
+	if (tree.b) {
+		depthlists(*tree.b, depth + 1, lists);
+	}
+	return lists;
+}
+
+bool isbalanced(const btree &tree, int depth = 0, int *mindepth = nullptr, int *maxdepth = nullptr) {
+	int mina, maxa;
+	if (tree.a) {
+		isbalanced(*tree.a, depth+1, &mina, &maxa);
+	} else {
+		mina = depth;
+		maxa = depth;
+	}
+	int minb, maxb;
+	if (tree.b) {
+		isbalanced(*tree.b, depth + 1, &minb, &maxb);
+	} else {
+		minb = depth;
+		maxb = depth;
+	}
+	int mind = depth + std::min(mina, minb);
+	int maxd = depth + std::max(minb, maxb);
+	if (mindepth) {
+		*mindepth = mind;
+	}
+	if (maxdepth) {
+		*maxdepth = maxd;
+	}
+	return maxd - mind < 2;
+}
+
+bool isbst(const btree &tree, const btree *parent = nullptr) {
+	bool res;
+	if (parent) {
+		if (&tree == parent->a) {
+			if (parent->b) {
+				res = tree.v <= parent->b->v;
+			} else {
+				res = true;
+			}
+		} else {
+			if (parent->a) {
+				res = tree.v >= parent->a->v;
+			} else {
+				res = true;
+			}
+		}
+	} else {
+		res = true;
+	}
+	if (tree.a) {
+		res = res && isbst(*tree.a, &tree);
+	}
+	if (tree.b) {
+		res = res && isbst(*tree.b, &tree);
+	}
+	return res;
+}
+
+template<typename R>
+void iot(const btree &tree, const R &receiver) {
+	if (tree.a) {
+		iot(*tree.a, receiver);
+	}
+	bool cont = receiver(tree);
+	if (!cont) {
+		return;
+	}
+	if (tree.b) {
+		iot(*tree.b, receiver);
+	}
+}
+
+const btree *ionext(const btree &tree, const btree &node) {
+	bool isnext = false;
+	const btree *next = nullptr;
+	iot(tree, [&](const btree &visit) {
+		if (isnext) {
+			next = &visit;
+			return false;
+		} else if (&visit == &node) {
+			isnext = true;
+		}
+		return true;
+	});
+	return next;
+}
+
+void buildorder(int *projects, int num_projects, std::tuple<int, int> *dependencies, int num_dependencies) {
+}
+
 int main(int argc, char **argv) {
 
 	return 0;
