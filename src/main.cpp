@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <list>
+#include <queue>
 
 template<typename TKey, typename TValue>
 TValue get_or_default(const std::unordered_map<TKey, TValue> &m, const TKey &k) {
@@ -203,6 +204,59 @@ slist *sumlists(slist &alist, slist &blist) {
 	}
 
 	return head;
+}
+
+struct dlist {
+	int value;
+	dlist *next, *prev;
+};
+
+bool ispalin(const dlist &list) {
+	const dlist *a, *b;
+	for (a = &list, b = list.prev; a != b; a = a->next, b = b->prev) {
+		if (a->value != b->value) {
+			return false;
+		}
+	}
+	return true;
+}
+
+bool isect(const slist &alist, const slist &blist) {
+	for (const slist *a = &alist; a; a = a->next) {
+		for (const slist *b = &blist; b; b = b->next) {
+			if (a == b) { // by ref
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+struct sgraph {
+	std::vector<sgraph*> children;
+};
+
+bool hasroute(const sgraph &s, const sgraph &e) {
+	if (&s == &e) {
+		return true;
+	}
+	std::queue<const sgraph *> q = std::queue<const sgraph *>();
+	std::unordered_set<const sgraph *> visited = std::unordered_set<const sgraph *>();
+	q.push(&s);
+	while (!q.empty()) {
+		const sgraph *n = q.front();
+		q.pop();
+		for (const sgraph *c : n->children) {
+			if (c == &e) {
+				return true;
+			}
+			if (visited.find(c) == visited.end()) {
+				q.push(c);
+			}
+		}
+		visited.insert(n);
+	}
+	return false;
 }
 
 int main(int argc, char **argv) {
