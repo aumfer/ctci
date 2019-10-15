@@ -2,6 +2,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <unordered_map>
+#include <list>
 
 template<typename TKey, typename TValue>
 TValue get_or_default(const std::unordered_map<TKey, TValue> &m, const TKey &k) {
@@ -132,6 +133,76 @@ char *compress(char *out, int *out_len, char *in, int len) {
 	*out_len = o - out;
 	*o = '\0';
 	return out;
+}
+
+std::list<int> removedupes(const std::list<int> &list) {
+	std::unordered_set<int> set = std::unordered_set<int>(list.begin(), list.end());
+	std::list<int> deduped = std::list<int>(set.begin(), set.end());
+	return deduped;
+}
+
+struct slist {
+	int val;
+	slist *next;
+};
+
+int ktolast(const slist &list, int k) {
+	//int buf[k];
+	int *buf = (int *)alloca(k * sizeof(int));
+	unsigned i = 0;
+	for (const slist *n = &list; n; n = n->next) {
+		buf[i++%k] = n->val;
+	}
+	return buf[i%k];
+}
+
+void delmid(slist &n) {
+	n.val = n.next->val;
+	n.next = n.next->next;
+}
+
+void partition(slist &head, int val) {
+	for (slist *n = &head; n->next; n = n->next) {
+		slist *m = n;
+		while (n->val >= val && m) {
+			std::swap(n->val, m->next->val);
+			m = m->next;
+		}
+	}
+}
+
+slist *sumlists(slist &alist, slist &blist) {
+	slist *head = nullptr;
+	slist *prev = nullptr;
+
+	slist *a, *b;
+	int carry = 0;
+	for (a = &alist, b = &blist; a || b; a = a ? a->next : nullptr, b = b ? b->next : nullptr) {
+		int av = a ? a->val : 0;
+		int bv = b ? b->val : 0;
+		int sum = av + bv;
+		if (carry) {
+			sum += carry;
+		}
+		if (sum >= 10) {
+			carry = 1;
+			sum -= 10;
+		} else {
+			carry = 0;
+		}
+
+		slist *next = new slist();
+		next->val = sum;
+		if (!head) {
+			head = next;
+		}
+		if (prev) {
+			prev->next = next;
+		}
+		prev = next;
+	}
+
+	return head;
 }
 
 int main(int argc, char **argv) {
