@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <list>
 #include <queue>
+#include <intrin.h>
 
 template<typename TKey, typename TValue>
 TValue get_or_default(const std::unordered_map<TKey, TValue> &m, const TKey &k) {
@@ -384,10 +385,94 @@ const btree *ionext(const btree &tree, const btree &node) {
 	return next;
 }
 
-void buildorder(int *projects, int num_projects, std::tuple<int, int> *dependencies, int num_dependencies) {
+void buildorder(int *projects, int num_projects, std::pair<int, int> *dependencies, int num_dependencies) {
+	for (int i = 0; i < num_dependencies; ++i) {
+		const std::pair<int, int> &d = dependencies[i];
+		int firsti, secondi;
+		for (int j = 0; j < num_projects; ++j) {
+			int p = projects[j];
+			if (p == d.second) {
+				secondi = j;
+			}
+			if (p == d.first) {
+				firsti = j;
+			}
+		}
+		if (secondi < firsti) {
+			int first = projects[firsti];
+			for (int j = firsti; j > secondi; --j) {
+				projects[j] = projects[j - 1];
+			}
+			projects[secondi] = first;
+		}
+	}
+}
+
+struct btreep {
+	btreep *a, *b, *parent;
+	int v;
+};
+
+const btreep *fca(const btreep &a, const btreep &b) {
+	if (!a.parent || !b.parent) {
+		return nullptr;
+	}
+	if (a.parent == b.parent) {
+		return a.parent;
+	}
+	return fca(*a.parent, *b.parent);
+}
+
+int countpathsum(const btree &tree, int sum) {
+	int count = tree.v == sum ? 1 : 0;
+	if (tree.a) {
+		count += countpathsum(*tree.a, sum - tree.v);
+	}
+	if (tree.b) {
+		count += countpathsum(*tree.b, sum - tree.v);
+	}
+	return count;
+}
+
+uint32_t insertbits(uint32_t n, uint32_t m, unsigned start, unsigned end) {
+	uint32_t mask = -1 >> (32 - (end - start));
+	return n | ((m&mask) << start);
+}
+
+void printbinarydouble(double v) {
+	uint64_t u = *(uint64_t *)&v;
+	for (unsigned i = 0; i < 64; ++i) {
+		printf("%d", u & (1 << i) ? 1 : 0);
+	}
+}
+
+int flipwin(uint32_t input) {
+	int max = 0;
+	for (unsigned i = 0; i < 32; ++i) {
+		for (unsigned j = 32 - i; j > i; --j) {
+			uint32_t mask = (-1 >> i) << j;
+			uint32_t test = input & mask;
+			int count = __popcnt(test);
+			if (count + 1 <= (j - i) && count > max) {
+				max = count;
+			}
+		}
+	}
+	return max;
 }
 
 int main(int argc, char **argv) {
+	int projects[] = { 'a', 'b', 'c', 'd', 'e', 'f' };
+	int num_projects = _countof(projects);
+	std::pair<int, int> dependencies[] = { { 'a', 'd' }, { 'f', 'b' }, { 'b', 'd' }, { 'f', 'a' }, { 'd', 'c' } };
+	int num_dependencies = _countof(dependencies);
+	buildorder(projects, num_projects, dependencies, num_dependencies);
+	int expected[] = { 'f', 'e', 'a', 'b', 'd', 'c' };
 
+	uint32_t n =insertbits(1024, 19, 2, 6);
+
+	printbinarydouble(3.1415);
+
+	int win = flipwin(1775);
 	return 0;
 }
