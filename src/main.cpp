@@ -461,6 +461,62 @@ int flipwin(uint32_t input) {
 	return max;
 }
 
+uint32_t nextsmallest1(uint32_t v) {
+	for (unsigned i = 0; i < 32; ++i) {
+		if ((v & (1 << i)) == 0) {
+			for (unsigned j = i; j < 32; ++j) {
+				if ((v & (1 << j)) != 0) {
+					return (v | (1 << i)) & ~(1 << j);
+				}
+			}
+		}
+	}
+	return -1;
+}
+uint32_t nextlargest1(uint32_t v) {
+	for (unsigned i = 0; i < 32; ++i) {
+		if ((v & (1 << i)) != 0) {
+			for (unsigned j = i; j < 32; ++j) {
+				if ((v & (1 << j)) == 0) {
+					return v & ~(1 << i) | (1 << j);
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+int conversion(uint32_t a, uint32_t b) {
+	int res = __popcnt(a ^ b);
+	return res;
+}
+
+constexpr uint32_t EVEN_BITS() {
+	uint32_t v = 0;
+	for (unsigned i = 0; i < 32; i += 2) {
+		v |= (1 << i);
+	}
+	return v;
+}
+constexpr uint32_t ODD_BITS() {
+	uint32_t v = 0;
+	for (unsigned i = 1; i < 32; i += 2) {
+		v |= (1 << i);
+	}
+	return v;
+}
+uint32_t pswap(uint32_t v) {
+	return ((v & EVEN_BITS()) << 1) | ((v & ODD_BITS()) >> 1);
+}
+
+void draw_line(uint8_t *screen, int screen_len, int width, int x1, int x2, int y) {
+	int height = (screen_len * 8) / width;
+	for (int x = std::min(x1, x2); x < std::max(x1, x2); ++x) {
+		int i = x * height + y;
+		screen[i / 8] |= (1 << i);
+	}
+}
+
 int main(int argc, char **argv) {
 	int projects[] = { 'a', 'b', 'c', 'd', 'e', 'f' };
 	int num_projects = _countof(projects);
@@ -469,10 +525,13 @@ int main(int argc, char **argv) {
 	buildorder(projects, num_projects, dependencies, num_dependencies);
 	int expected[] = { 'f', 'e', 'a', 'b', 'd', 'c' };
 
-	uint32_t n =insertbits(1024, 19, 2, 6);
+	uint32_t n = insertbits(1024, 19, 2, 6);
 
 	printbinarydouble(3.1415);
 
 	int win = flipwin(1775);
+
+	uint32_t s = nextsmallest1(11);
+	uint32_t l = nextlargest1(11);
 	return 0;
 }
