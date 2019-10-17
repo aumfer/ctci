@@ -5,6 +5,7 @@
 #include <list>
 #include <queue>
 #include <intrin.h>
+#include <vector>
 
 template<typename TKey, typename TValue>
 TValue get_or_default(const std::unordered_map<TKey, TValue> &m, const TKey &k) {
@@ -573,6 +574,71 @@ unsigned recurmult(unsigned a, unsigned b, unsigned sofar = 0) {
 	}
 }
 
+std::vector<std::string> *permute(const std::string &str) {
+	std::vector<std::string> *result = new std::vector<std::string>();
+	if (str.length() == 0) {
+		result->push_back(str);
+	} else {
+		char next = str[0];
+		std::string rest = str.substr(1);
+		std::vector<std::string> *perms = permute(rest);
+		for (const std::string &s : *perms) {
+			for (int i = 0; i <= s.length(); ++i) {
+				std::string p = s;
+				p.insert(i, 1, next);
+				result->push_back(p);
+			}
+		}
+		delete perms;
+	}
+	return result;
+}
+
+std::unordered_set<std::string> *permutenodupe(const std::string &str) {
+	std::unordered_set<std::string> *result = new std::unordered_set<std::string>();
+	if (str.length() == 0) {
+		result->insert(str);
+	}
+	else {
+		char next = str[0];
+		std::string rest = str.substr(1);
+		std::unordered_set<std::string> *perms = permutenodupe(rest);
+		for (const std::string &s : *perms) {
+			for (int i = 0; i <= s.length(); ++i) {
+				std::string p = s;
+				p.insert(i, 1, next);
+				result->insert(p);
+			}
+		}
+		delete perms;
+	}
+	return result;
+}
+
+void allparen(int n, int cur = 0, const std::string &s = std::string("")) {
+	if (cur < n) {
+		allparen(n, cur + 1, s + "(");
+	}
+	if (cur > 0) {
+		allparen(n - 1, cur - 1, s + ")");
+	}
+	if (cur == 0) {
+		puts(s.c_str());
+	}
+}
+
+void paintfill(unsigned *screen, int w, int h, int x, int y, unsigned from, unsigned to) {
+	unsigned *p = &screen[x * h + y];
+	if (*p == from) {
+		*p = to;
+		for (int i = -1; i <= 1; ++i) {
+			for (int j = -1; j <= 1; ++j) {
+				paintfill(screen, w, h, x + i, y + j, from, to);
+			}
+		}
+	}
+}
+
 int main(int argc, char **argv) {
 	int projects[] = { 'a', 'b', 'c', 'd', 'e', 'f' };
 	int num_projects = _countof(projects);
@@ -593,5 +659,10 @@ int main(int argc, char **argv) {
 	unsigned m1 = recurmult(3, 3);
 	unsigned m2 = recurmult(3, 4);
 	unsigned m3 = recurmult(4, 3);
+
+	auto perms = permute(std::string("world"));
+	auto permsnodupe = permutenodupe(std::string("Hello"));
+
+	allparen(3);
 	return 0;
 }
