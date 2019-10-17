@@ -517,6 +517,62 @@ void draw_line(uint8_t *screen, int screen_len, int width, int x1, int x2, int y
 	}
 }
 
+int triplestep(int nsteps, int cursteps = 0) {
+	if (cursteps > nsteps) return 0;
+	if (cursteps == nsteps) return 1;
+	int one = triplestep(nsteps, cursteps + 1);
+	int two = triplestep(nsteps, cursteps + 2);
+	int tre = triplestep(nsteps, cursteps + 3);
+	return one + two + tre;
+}
+
+bool robotgrid(bool *invalid, bool *onpath, int r, int c, int x = 0, int y = 0) {
+	if (invalid[x * r + y]) {
+		return false;
+	}
+	if (x == c && y == r) {
+		onpath[x * r + y] = true;
+		return true;
+	}
+	if (x < c) {
+		if (robotgrid(invalid, onpath, r, c, x + 1, y)) {
+			onpath[x * r + y] = true;
+			return true;
+		}
+	}
+	if (y < r) {
+		if (robotgrid(invalid, onpath, r, c, x, y + 1)) {
+			onpath[x * r + y] = true;
+			return true;
+		}
+	}
+	return false;
+}
+
+int magicindex(int *sdi, int len, int offset = 0) {
+	if (len == 0) {
+		return -1;
+	}
+	int mid = len / 2;
+	if (sdi[mid] == mid + offset) {
+		return mid + offset;
+	} else if (sdi[mid] < mid + offset) {
+		return magicindex(sdi, mid, offset);
+	} else {
+		return magicindex(sdi + mid, mid, offset+mid);
+	}
+}
+
+unsigned recurmult(unsigned a, unsigned b, unsigned sofar = 0) {
+	if (b >= 2) {
+		return recurmult(a, b - 2, sofar + (a << 1));
+	} else if (b) {
+		return sofar + a;
+	} else {
+		return sofar;
+	}
+}
+
 int main(int argc, char **argv) {
 	int projects[] = { 'a', 'b', 'c', 'd', 'e', 'f' };
 	int num_projects = _countof(projects);
@@ -533,5 +589,9 @@ int main(int argc, char **argv) {
 
 	uint32_t s = nextsmallest1(11);
 	uint32_t l = nextlargest1(11);
+
+	unsigned m1 = recurmult(3, 3);
+	unsigned m2 = recurmult(3, 4);
+	unsigned m3 = recurmult(4, 3);
 	return 0;
 }
