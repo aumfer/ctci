@@ -692,6 +692,183 @@ int stackboxes(std::vector<box_t> &boxes) {
 	return count;
 }
 
+bool tictacwin(int *board, int n) {
+	int i, j;
+
+	// diag
+	if (board[0]) {
+		int player = board[0];
+		for (i = 0; i < n; ++i) {
+			if (board[i * n + i] != player) {
+				break;
+			}
+		}
+		if (i == n) {
+			return true;
+		}
+	}
+
+	// vert
+	for (i = 0; i < n; ++i) {
+		int player = board[i * n + 0];
+		if (player) {
+			for (j = 0; j < n; ++j) {
+				if (board[i * n + j] != player) {
+					break;
+				}
+			}
+			if (j == n) {
+				return true;
+			}
+		}
+	}
+
+	// hori
+	for (i = 0; i < n; ++i) {
+		int player = board[i];
+		if (player) {
+			for (j = 0; j < n; ++j) {
+				if (board[j * n + i] != player) {
+					break;
+				}
+			}
+			if (j == n) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+int factzeros(int n) {
+	unsigned long long fact = 1;
+	while (n > 0) {
+		fact *= n--;
+	}
+	int count = 0;
+	while (fact % 10 == 0) {
+		fact /= 10;
+		++count;
+	}
+	return count;
+}
+
+int smalldiff(int *a, int alen, int *b, int blen) {
+	std::sort(a, a + alen);
+	std::sort(b, b + blen);
+	int dif = INT_MAX;
+	int ai, bi;
+	for (ai = 0, bi = 0; ai < alen && bi < blen;) {
+		int d = a[ai] - b[bi];
+		if (d < 0) {
+			++ai;
+			continue;
+		}
+		dif = std::min(dif, d);
+		++bi;
+
+	}
+	return dif;
+}
+
+int nmax(int a, int b) {
+	unsigned k = unsigned(b - a) >> 31;
+	return a * k + b * ((~k)&1);
+}
+
+void englishint(int n) {
+	static const char *names[] = { "zero",
+		"one", "two", "three", "four", "five",
+		"six", "seven", "eight", "nine", "ten"
+	};
+	int thou;
+	int hund;
+	int tens;
+	int ones;
+
+	if (n > 10000) {
+		thou = n / 1000;
+		englishint(thou);
+		printf(" thousand");
+		n -= thou * 1000;
+	} else if (n >= 1000) {
+		thou = n / 1000;
+		printf("%s thousand", names[thou]);
+		n -= thou * 1000;
+	} else {
+		thou = 0;
+	}
+	if (n >= 100) {
+		hund = n / 100;
+		printf("%s%s hundred", thou ? ", " : "", names[hund]);
+		n -= hund * 100;
+	} else {
+		hund = 0;
+	}
+	if (n >= 10) {
+		tens = n / 10;
+		printf("%s%s", hund ? " " : "", names[tens]);
+		n -= tens * 10;
+	} else {
+		tens = 0;
+	}
+	if (n) {
+		ones = n;
+		printf("%s%s", tens ? "-" : "", names[ones]);
+		n -= ones * 1;
+	}
+	assert(!n);
+}
+
+struct person_t {
+	int birth, death;
+};
+int livingppl(const person_t *people, int count) {
+	std::unordered_map<int, int> births = std::unordered_map<int, int>();
+	std::unordered_map<int, int> deaths = std::unordered_map<int, int>();
+	for (int i = 0; i < count; ++i) {
+		const person_t &p = people[i];
+		int b = get_or_default(births, p.birth);
+		births[p.birth] = b + 1;
+		int d = get_or_default(deaths, p.death);
+		deaths[p.death] = d + 1;
+	}
+	int alive = 0;
+	for (int y = 1900; y < 2000; ++y) {
+		alive += get_or_default(births, y);
+		alive -= get_or_default(deaths, y);
+	}
+	return alive;
+}
+
+void divingboard(int k, int *count) {
+	if (k == 0) {
+		++*count;
+		return;
+	}
+	divingboard(k - 1, count);
+	divingboard(k - 1, count);
+}
+
+struct square_t {
+	int x, y, w, h;
+};
+struct line_t {
+	float x0, x1, y0, y1;
+};
+line_t bisectsq(const square_t &a, const square_t &b) {
+	float midax = a.x + (a.w / 2.0f);
+	float miday = a.y + (a.h / 2.0f);
+	float midbx = b.x + (b.w / 2.0f);
+	float midby = b.y + (b.h / 2.0f);
+	line_t l = {
+		midax, midbx,
+		miday, midby
+	};
+	return l;
+}
+
 int main(int argc, char **argv) {
 	int projects[] = { 'a', 'b', 'c', 'd', 'e', 'f' };
 	int num_projects = _countof(projects);
@@ -719,5 +896,17 @@ int main(int argc, char **argv) {
 	allparen(3);
 
 	auto coin = coins(6);
+
+	int zeros = factzeros(19);
+
+	int a[] = { 1,3,15,11,2 };
+	int b[] = { 23,127,235,19,8 };
+	int dif = smalldiff(a, 5, b, 5);
+
+	int nm = nmax(10, 5);
+
+	englishint(1337);
+	puts("");
+	englishint(119500);
 	return 0;
 }
