@@ -6,6 +6,7 @@
 #include <queue>
 #include <intrin.h>
 #include <vector>
+#include <cassert>
 
 template<typename TKey, typename TValue>
 TValue get_or_default(const std::unordered_map<TKey, TValue> &m, const TKey &k) {
@@ -639,6 +640,58 @@ void paintfill(unsigned *screen, int w, int h, int x, int y, unsigned from, unsi
 	}
 }
 
+std::vector<std::vector<int>> *coins(int cents, int index = 0, std::vector<std::vector<int>> *result = nullptr) {
+	if (result == nullptr) {
+		result = new std::vector<std::vector<int>>();
+		(*result).push_back(std::vector<int>());
+	}
+	if (cents == 0) {
+		return result;
+	}
+	if (cents >= 1) {
+		(*result)[index].push_back(1);
+		coins(cents - 1, index, result);
+	}
+	if (cents >= 5) {
+		(*result).push_back(std::vector<int>());
+		(*result)[result->size()-1].push_back(5);
+		coins(cents - 5, result->size() - 1, result);
+	}
+	if (cents >= 10) {
+		(*result).push_back(std::vector<int>());
+		(*result)[result->size() - 1].push_back(10);
+		coins(cents - 10, result->size() - 1, result);
+	}
+	if (cents >= 25) {
+		(*result).push_back(std::vector<int>());
+		(*result)[result->size() - 1].push_back(25);
+		coins(cents - 25, result->size() - 1, result);
+	}
+	return result;
+}
+
+struct box_t {
+	int w, h, d;
+};
+int stackboxes(std::vector<box_t> &boxes) {
+	std::sort(boxes.begin(), boxes.end(), [](const box_t &a, const box_t &b) {
+		return (a.w + a.h + a.d) > (b.w + b.h + b.d);
+	});
+	int count = 0;
+	const box_t *b;
+	for (int i = 0; i < boxes.size(); ++i) {
+		if (!count) {
+			++count;
+			b = &boxes[i];
+		}
+		if (boxes[i].w < b->w && boxes[i].h < b->h && boxes[i].d < b->d) {
+			++count;
+			b = &boxes[i];
+		}
+	}
+	return count;
+}
+
 int main(int argc, char **argv) {
 	int projects[] = { 'a', 'b', 'c', 'd', 'e', 'f' };
 	int num_projects = _countof(projects);
@@ -664,5 +717,7 @@ int main(int argc, char **argv) {
 	auto permsnodupe = permutenodupe(std::string("Hello"));
 
 	allparen(3);
+
+	auto coin = coins(6);
 	return 0;
 }
