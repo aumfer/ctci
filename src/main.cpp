@@ -8,8 +8,13 @@
 #include <vector>
 #include <cassert>
 
-template<typename TKey, typename TValue>
-TValue get_or_default(const std::unordered_map<TKey, TValue> &m, const TKey &k) {
+/*
+ * these are not all complete/correct answers
+ * just enough to get conversation started & fix from there
+ */
+
+template<typename TMap, typename TKey = TMap::key_type, typename TValue = TMap::mapped_type>
+TValue get_or_default(const TMap &m, const TKey &k) {
 	auto mf = m.find(k);
 	TValue default_v = { 0 };
 	TValue v = mf == m.end() ? default_v : mf->second;
@@ -869,6 +874,133 @@ line_t bisectsq(const square_t &a, const square_t &b) {
 	return l;
 }
 
+struct mxb_t {
+	float m, t;
+};
+struct hashline {
+	constexpr size_t operator()(const mxb_t &l) const {
+		// todo quantize
+		return *(size_t *)&l.m ^ *(size_t *)&l.t;
+	};
+};
+struct eqline {
+	bool operator()(const mxb_t& l, const mxb_t& r) const {
+		const float EPISLON = 1e-6;
+		return std::abs(l.m - r.m) <= EPISLON && std::abs(l.t - r.t) <= EPISLON;
+	}
+};
+
+mxb_t bestline(float *xs, float *ys, int num_points) {
+	std::unordered_map<mxb_t, int, hashline, eqline> lines = std::unordered_map<mxb_t, int, hashline, eqline>();
+
+	for (int i = 0; i < num_points; ++i) {
+		for (int j = 0; j < num_points; ++j) {
+			float x0 = xs[i];
+			float x1 = xs[j];
+			float y0 = ys[i];
+			float y1 = ys[j];
+
+			float m = (x1 - x0) / (y1 - y0);
+			float b = y0 - m * x0;
+			mxb_t l = { m , b };
+			int count = get_or_default(lines, l);
+			lines[l] = count + 1;
+		}
+	}
+
+	mxb_t best = {};
+	int most = 0;
+	for (auto kvp : lines) {
+		if (kvp.second > most) {
+			best = kvp.first;
+			most = kvp.second;
+		}
+	}
+	return best;
+}
+
+void mmind(char *solution, char *guess, int num_slots, int *hits, int *phits) {
+	for (int i = 0; i < num_slots; ++i) {
+		if (!solution[i] || !guess[i]) {
+			continue;
+		}
+		if (solution[i] == guess[i]) {
+			++*hits;
+			solution[i] = 0;
+			guess[i] = 0;
+		}
+	}
+	for (int i = 0; i < num_slots; ++i) {
+		char g = guess[i];
+		if (!g) {
+			continue;
+		}
+		for (int j = 0; j < num_slots; ++j) {
+			if (!solution[j]) {
+				continue;
+			}
+			if (solution[j] == g) {
+				++*phits;
+				guess[i] = 0;
+				solution[i] = 0;
+				break;
+			}
+		}
+	}
+}
+
+int contsum(int *arr, int count) {
+	int besth = 0;
+	
+	for (int head = 0; head < count; ++head) {
+		int sum = arr[head];
+		int bestt = sum;
+		for (int tail = head+1; tail < count; ++tail) {
+			sum += arr[tail];
+			if (sum > bestt) {
+				bestt = sum;
+			}
+		}
+		besth = std::max(besth, bestt);
+	}
+	return besth;
+}
+
+bool pmatch(const char *pattern, const char *value) {
+	int plen = strlen(pattern);
+	int vlen = strlen(value);
+	char first = pattern[0];
+	int secondi = 0;
+	for (int alen = 1; alen < vlen; ++alen) {
+		for (int blen = 1; blen < vlen; ++blen) {
+			int end = 0;
+			int k;
+			for (k = 0; k < plen; ++k) {
+				if (pattern[k] == first) {
+					if (!memcmp(value + end, value, alen)) {
+						end += alen;
+					} else {
+						break;
+					}
+				} else {
+					if (!secondi) {
+						secondi = end;
+					}
+					if (!memcmp(value + end, value + secondi, blen)) {
+						end += blen;
+					} else {
+						break;
+					}
+				}
+			}
+			if (end == vlen && k == plen) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 int main(int argc, char **argv) {
 	int projects[] = { 'a', 'b', 'c', 'd', 'e', 'f' };
 	int num_projects = _countof(projects);
@@ -908,5 +1040,10 @@ int main(int argc, char **argv) {
 	englishint(1337);
 	puts("");
 	englishint(119500);
+
+	int arr[] = { 2, -8, 3, -2, 4, -10 };
+	int cs = contsum(arr, _countof(arr));
+
+	bool pm = pmatch("aabab", "catcatgocatgo");
 	return 0;
 }
